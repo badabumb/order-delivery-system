@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silverwax</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Silverwax</h1>
+    </div>
+    <div class="main">
+        <!-- Добавление картинки -->>
+        <div class="product-image">
+            <img src="images/tshirt.png" class="image" alt="Футболка" width="300px">
+            <p class="description">3500 RUB</p>
+            <p class="description">One Size: length 66sm, bust 52sm, shoulder 54.5sm, sleeve 20sm.</p>
+        </div>
+        <div class="form">
+            <form id="orderForm">
+                <input type="text" name="name" placeholder="Your email" required>
+                <input type="text" name="address" placeholder="Your address" required>
+                <button type="submit">Tap to order</button>
+            </form>
+            <p class="form__message" id="responseMessage"></p>
+        </div>
+    </div>
+    
+
+    <script>
+        document.getElementById("orderForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = e.target.name.value;
+        const address = e.target.address.value;
+        try {
+            const response = await fetch("http://localhost/api/order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, address }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Ошибка: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            document.getElementById("responseMessage").textContent = data.message || "Заказ отправлен!";
+        } catch (error) {
+            console.error("Ошибка запроса:", error);
+            document.getElementById("responseMessage").textContent = "Ошибка при отправке формы.";
+        }
+    });
+    </script>
+</body>
+</html>
