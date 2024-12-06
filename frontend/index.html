@@ -11,7 +11,6 @@
         <h1>Silverwax</h1>
     </div>
     <div class="main">
-        <!-- Добавление картинки -->>
         <div class="product-image">
             <img src="images/tshirt.png" class="image" alt="Футболка" width="300px">
             <p class="description">3500 RUB</p>
@@ -19,38 +18,69 @@
         </div>
         <div class="form">
             <form id="orderForm">
-                <input type="text" name="name" placeholder="Your email" required>
-                <input type="text" name="address" placeholder="Your address" required>
-                <button type="submit">Tap to order</button>
+                <input type="email" name="email" placeholder="Электронный адрес" required>
+                <input type="text" name="city" placeholder="Город" required>
+                <input type="text" name="street" placeholder="Улица" required>
+                <input type="text" name="house" placeholder="Дом" required>
+                <input type="text" name="apartment" placeholder="Квартира">
+                <input type="text" name="name" placeholder="Имя" required>
+                <button type="submit">Сделать заказ</button>
             </form>
             <p class="form__message" id="responseMessage"></p>
         </div>
+        <div class="form">
+            <form id="statusForm">
+                <input type="email" name="email" placeholder="Введите ваш email" required>
+                <button type="submit">Проверить статус заказа</button>
+            </form>
+            <p class="form__message" id="statusMessage"></p>
+        </div>
     </div>
-    
 
     <script>
+        // Обработка формы заказа
         document.getElementById("orderForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const name = e.target.name.value;
-        const address = e.target.address.value;
-        try {
-            const response = await fetch("http://localhost/api/order", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, address }),
-            });
-
-            if (!response.ok) {
-                throw new Error(`Ошибка: ${response.status} ${response.statusText}`);
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            try {
+                const response = await fetch("http://localhost/api/order", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data),
+                });
+                if (!response.ok) throw new Error(`Ошибка: ${response.status} ${response.statusText}`);
+                const result = await response.json();
+                document.getElementById("responseMessage").textContent = result.message || "Заказ отправлен!";
+            } catch (error) {
+                document.getElementById("responseMessage").textContent = "Ошибка при отправке формы.";
             }
+        });
 
-            const data = await response.json();
-            document.getElementById("responseMessage").textContent = data.message || "Заказ отправлен!";
-        } catch (error) {
-            console.error("Ошибка запроса:", error);
-            document.getElementById("responseMessage").textContent = "Ошибка при отправке формы.";
-        }
-    });
+        // Обработка формы проверки статуса
+        document.getElementById("statusForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const email = e.target.email.value;
+            try {
+                const response = await fetch(`http://localhost/api/order/status?email=${email}`, {
+                    method: "GET",
+                });
+                if (!response.ok) throw new Error(`Ошибка: ${response.status} ${response.statusText}`);
+                const result = await response.json();
+                
+                if (result.orders && result.orders.length > 0) {
+                    let statusMessage = "";
+                    result.orders.forEach(order => {
+                        statusMessage += `Заказ ID${order.id}: ${order.status}<br>`;
+                    });
+                    document.getElementById("statusMessage").innerHTML = statusMessage;
+                } else {
+                    document.getElementById("statusMessage").textContent = "Заказы не найдены.";
+                }
+            } catch (error) {
+                document.getElementById("statusMessage").textContent = "Ошибка при проверке статуса.";
+            }
+            });
     </script>
 </body>
 </html>
